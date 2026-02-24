@@ -1,0 +1,7 @@
+id,date,category,amount,description
+1,2026-11-23 00:00:00,Birthday,1000.0,Gagan Birthday
+2,2026-02-23 00:00:00,Food,100.0,Lunch
+3,2026-01-15 00:00:00,Travel,340.0,Train to Wgl
+4,2026-02-22,Travel,15.0,IIIT Hyderabad
+5,2026-02-23,Food,55.0,Lunch at office
+6,2026-02-23,Travel,65.0,Rapido to office
