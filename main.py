@@ -1,4 +1,4 @@
-
+import matplotlib.pyplot as plt
 from expenses import Expense
 from datetime import datetime
 import csv
@@ -9,8 +9,6 @@ FILE_NAME = "expenses.csv"
 expenses = []
 expense_counter = 1
 
-
-# ================= LOAD EXPENSES =================
 def load_expenses():
     global expenses, expense_counter
 
@@ -35,26 +33,21 @@ def load_expenses():
     except FileNotFoundError:
         pass
 
-
-# ================= SAVE EXPENSES =================
 def save_expenses():
     with open(FILE_NAME, mode="w", newline="") as file:
         writer = csv.writer(file)
 
-        # Always write correct lowercase headers
         writer.writerow(["id", "date", "category", "amount", "description"])
 
         for expense in expenses:
             writer.writerow([
                 expense.expense_id,
-                expense.date.strftime("%Y-%m-%d"),  # save clean date
+                expense.date.strftime("%Y-%m-%d"),
                 expense.category,
                 expense.amount,
                 expense.description
             ])
 
-
-# ================= VALIDATIONS =================
 def validate_date(date_text):
     try:
         datetime.strptime(date_text, "%Y-%m-%d")
@@ -72,8 +65,6 @@ def validate_amount(amount_text):
     except ValueError:
         return None
 
-
-# ================= ADD EXPENSE =================
 def add_expense():
     global expense_counter
 
@@ -112,8 +103,6 @@ def add_expense():
     save_expenses()
     print("Expense added successfully!")
 
-
-# ================= VIEW EXPENSES =================
 def view_expenses():
     if not expenses:
         print("\nNo expenses found.")
@@ -133,12 +122,9 @@ def view_expenses():
             expense.description
         ))
 
-
-# ================= DELETE EXPENSE =================
 def reassign_ids():
     for index, expense in enumerate(expenses):
         expense.expense_id = index + 1
-
 
 def delete_expense():
     global expense_counter
@@ -164,8 +150,6 @@ def delete_expense():
 
     print("Expense not found!")
 
-
-# ================= MONTHLY SUMMARY =================
 def monthly_summary():
     if not expenses:
         print("\nNo expenses available.")
@@ -207,8 +191,6 @@ def monthly_summary():
             category, amount, percentage
         ))
 
-
-# ================= SORTING =================
 def sort_expenses_by_date(order="asc"):
     if not expenses:
         print("\nNo expenses to sort.")
@@ -220,7 +202,6 @@ def sort_expenses_by_date(order="asc"):
     print("\nExpenses sorted successfully!")
     view_expenses()
 
-# ================= SEARCH EXPENSES ================
 def search_expenses():
     if not expenses:
         print("\nNo expenses available to search.")
@@ -277,7 +258,74 @@ def search_expenses():
             expense.description
         ))                   
 
-# ================= MAIN MENU =================
+def show_pie_chart():
+    if not expenses:
+        print("\nNo expenses available.")
+        return
+
+    month_input = input("Enter month (YYYY-MM): ")
+
+    try:
+        selected_month = datetime.strptime(month_input, "%Y-%m")
+    except ValueError:
+        print("Invalid month format.")
+        return    
+    
+    category_totals = {}
+
+    for expense in expenses:
+        if (expense.date.year == selected_month.year and expense.date.month == selected_month.month):
+            category_totals[expense.category] = (
+                category_totals.get(expense.category, 0) + expense.amount
+        )
+
+    if not category_totals:
+        print("No expenses found for this month.")
+        return
+
+    labels = list(category_totals.keys())
+    amounts = list(category_totals.values())
+
+    plt.figure()
+    plt.pie(amounts, labels=labels, autopct="%1.1f%%")
+    plt.title("Expense Distribution by Category")
+    plt.show()
+
+def show_bar_chart():
+    if not expenses:
+        print("\nNo expenses available to display chart.")
+        return
+
+    month_input = input("Enter month (YYYY-MM): ")
+
+    try:
+        selected_month = datetime.strptime(month_input, "%Y-%m")
+    except ValueError:
+        print("Invalid month format.")
+        return
+    
+    category_totals = {}
+
+    for expense in expenses:
+        if (expense.date.year == selected_month.year and expense.date.month == selected_month.month):
+            category_totals[expense.category] = (
+                category_totals.get(expense.category, 0) + expense.amount
+        )
+
+    if not category_totals:
+        print("No expenses found for this month.")
+        return 
+
+    categories = list(category_totals.keys())
+    amounts = list(category_totals.values())
+
+    plt.figure()
+    plt.bar(categories, amounts)
+    plt.xlabel("Category")
+    plt.ylabel("Amount (Rs.)")
+    plt.title("Category-wise Expense Bar Chart")
+    plt.show()
+
 def main_menu():
     load_expenses()
 
@@ -290,7 +338,9 @@ def main_menu():
         print("5. Sort Ascending")
         print("6. Sort Descending")
         print("7. Search Expenses")
-        print("8. Exit")
+        print("8. Pie Chart")
+        print("9. Bar Chart")
+        print("10. Exit")
 
         choice = input("Enter your choice: ")
 
@@ -309,6 +359,10 @@ def main_menu():
         elif choice == "7":
             search_expenses()
         elif choice == "8":
+            show_pie_chart()
+        elif choice == "9":
+            show_bar_chart()
+        elif choice == "10":
             print("Exiting...")
             break
         else:
