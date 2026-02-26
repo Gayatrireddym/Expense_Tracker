@@ -1,3 +1,5 @@
-date,category,amount,description,type
-2026-02-05 00:00:00,Groceries,20000.0,-,Expense
-2026-02-05,Groceries,2000.0,-,Expense
+date,type,category,amount,description
+2026-02-04,Income,Salary,50000.0,
+2026-02-12,Expense,Groceries,20000.0,Food
+2026-02-26,Expense,Travel,500.0,
+2026-02-26,Expense,Food,100.0,Lunch
