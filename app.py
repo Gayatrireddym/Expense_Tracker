@@ -4,29 +4,32 @@ import os
 
 FILE_NAME = "expense.csv"
 
-# Load data
+# ---------------- LOAD DATA ----------------
 def load_data():
     if os.path.exists(FILE_NAME):
         df = pd.read_csv(FILE_NAME)
     else:
-        df = pd.DataFrame(columns=["date", "type", "category", "amount", "description"])
+        df = pd.DataFrame(columns=["id", "date", "type", "category", "amount", "description"])
+
+    # Ensure ID column exists
+    if "id" not in df.columns:
+        df.insert(0, "id", range(1, len(df) + 1))
 
     return df
 
 
-# Save data
+# ---------------- SAVE DATA ----------------
 def save_data(df):
     df.to_csv(FILE_NAME, index=False)
 
 
-# Page config
+# ---------------- PAGE CONFIG ----------------
 st.set_page_config(page_title="Finance Tracker Dashboard", layout="wide")
 st.title("Finance Tracker Dashboard")
 
-# Load fresh data every run
 df = load_data()
 
-# Add entry
+# ---------------- ADD ENTRY ----------------
 st.sidebar.header("Add New Entry")
 
 with st.sidebar.form("entry_form", clear_on_submit=True):
@@ -40,16 +43,18 @@ with st.sidebar.form("entry_form", clear_on_submit=True):
 if submitted:
     if category.strip() != "" and amount > 0:
 
+        latest_df = load_data()
+
+        new_id = 1 if latest_df.empty else latest_df["id"].max() + 1
+
         new_entry = pd.DataFrame([{
-            "date": str(date),   # Always store as string
+            "id": new_id,
+            "date": str(date),
             "type": entry_type,
             "category": category.title(),
             "amount": float(amount),
             "description": description
         }])
-
-        # ALWAYS reload latest CSV before appending
-        latest_df = load_data()
 
         updated_df = pd.concat([latest_df, new_entry], ignore_index=True)
 
@@ -62,7 +67,7 @@ if submitted:
         st.sidebar.error("Please enter valid details.")
 
 
-# Reload data AFTER potential save
+# Reload updated data
 df = load_data()
 
 # Convert types safely
@@ -70,12 +75,30 @@ if not df.empty:
     df["date"] = pd.to_datetime(df["date"], errors="coerce")
     df["amount"] = pd.to_numeric(df["amount"], errors="coerce")
 
-# Show data
+# ---------------- SHOW DATA ----------------
 st.subheader("All Transactions")
 st.dataframe(df.sort_values("date", ascending=False))
 
 
-# Summary
+# ---------------- DELETE ENTRY ----------------
+st.subheader("Delete Entry")
+
+if not df.empty:
+
+    delete_id = st.selectbox(
+        "Select Transaction ID to Delete",
+        df["id"].tolist()
+    )
+
+    if st.button("Delete Selected Entry"):
+        updated_df = df[df["id"] != delete_id]
+        save_data(updated_df)
+
+        st.success(f"Entry with ID {delete_id} deleted successfully!")
+        st.rerun()
+
+
+# ---------------- SUMMARY ----------------
 if not df.empty:
 
     total_income = df[df["type"] == "Income"]["amount"].sum()
@@ -95,7 +118,6 @@ st.subheader("📅 Monthly Analysis")
 
 if not df.empty:
 
-    df["date"] = pd.to_datetime(df["date"], errors="coerce")
     df["year_month"] = df["date"].dt.to_period("M")
 
     months = sorted(df["year_month"].astype(str).dropna().unique())
@@ -116,11 +138,8 @@ if not df.empty:
         expense_data = filtered_df[filtered_df["type"] == "Expense"]
 
         if not expense_data.empty:
-
             category_summary = expense_data.groupby("category")["amount"].sum()
-
             st.write("### Category-wise Expense (Bar Chart)")
             st.bar_chart(category_summary)
-
         else:
             st.info("No expenses for selected month.")
