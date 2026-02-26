@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
 import os
 
 FILE_NAME = "expense.csv"
@@ -91,12 +90,14 @@ if not df.empty:
     col3.metric("Total Savings", f"Rs. {savings:.2f}")
 
 
-# Monthly analysis
-st.subheader("Monthly Analysis")
+# ---------------- MONTHLY ANALYSIS ----------------
+st.subheader("📅 Monthly Analysis")
 
 if not df.empty:
 
+    df["date"] = pd.to_datetime(df["date"], errors="coerce")
     df["year_month"] = df["date"].dt.to_period("M")
+
     months = sorted(df["year_month"].astype(str).dropna().unique())
 
     if months:
@@ -108,30 +109,18 @@ if not df.empty:
         month_expense = filtered_df[filtered_df["type"] == "Expense"]["amount"].sum()
         month_savings = month_income - month_expense
 
-        st.write(f"#### Income: Rs. {month_income:.2f}")
-        st.write(f"#### Expense: Rs. {month_expense:.2f}")
-        st.write(f"#### Savings: Rs. {month_savings:.2f}")
+        st.write(f"### Income: Rs. {month_income:.2f}")
+        st.write(f"### Expense: Rs. {month_expense:.2f}")
+        st.write(f"### Savings: Rs. {month_savings:.2f}")
 
         expense_data = filtered_df[filtered_df["type"] == "Expense"]
-        pie_data = expense_data.groupby("category")["amount"].sum()
 
-        if not pie_data.empty:
+        if not expense_data.empty:
 
-            fig1 = plt.figure()
-            plt.pie(pie_data, labels=pie_data.index, autopct="%1.1f%%")
-            plt.title("Category-wise Expense Distribution")
-            st.pyplot(fig1)
+            category_summary = expense_data.groupby("category")["amount"].sum()
 
-            fig2 = plt.figure()
-            plt.bar(pie_data.index, pie_data.values)
-            plt.xticks(rotation=45)
-            plt.xlabel("Category")
-            plt.ylabel("Amount (Rs.)")
-            plt.title("Category-wise Expense Distribution")
-            st.pyplot(fig2)
+            st.write("### Category-wise Expense (Bar Chart)")
+            st.bar_chart(category_summary)
 
         else:
             st.info("No expenses for selected month.")
-
-else:
-    st.info("No data available.")
